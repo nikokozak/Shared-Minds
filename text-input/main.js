@@ -1,36 +1,13 @@
-// Canvas Text Input – functional architecture
+// ============================== CANVAS TEXT INPUT ===========================
 // Setup -> Input -> Middleware/Plugin -> Storage -> Render
 
 import { prefs } from './prefs.js';
+import { createRng, hashStringToSeed } from './rng.js';
+import { pluginRegistry } from './plugins.js';
 
-// --------------------------- Utilities ---------------------------
 
-/**
- * Create a seeded pseudo-random generator using mulberry32.
- * @param {number} seed
- * @returns {() => number} function that returns [0,1)
- */
-function createRng(seed) {
-  let t = seed >>> 0;
-  return function next() {
-    t += 0x6D2B79F5;
-    let r = Math.imul(t ^ (t >>> 15), 1 | t);
-    r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
-    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
-/**
- * Deterministically convert a string to a 32-bit int seed.
- */
-function hashStringToSeed(str) {
-  let h = 2166136261 >>> 0;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
+// ============================== UTILITY HELPERS =============================
 
 /**
  * Get a seed per entry based on prefs.
@@ -67,48 +44,16 @@ function measureTextWidth(ctx, text, fontPx, fontFamily) {
   return width;
 }
 
-// --------------------------- Plugins ---------------------------
-
-/**
- * Plugin: assign a random color to the entry's textColor.
- */
-function pluginRandomColor(entry, env) {
-  const rng = env.rng;
-  const hue = Math.floor(rng() * 360);
-  const sat = 60 + Math.floor(rng() * 30);
-  const light = 40 + Math.floor(rng() * 40);
-  return { ...entry, textColor: `hsl(${hue} ${sat}% ${light}%)` };
+function measureTextMetrics(ctx, text, fontPx, fontFamily) {
+  ctx.save();
+  ctx.font = `${fontPx}px ${fontFamily}`;
+  const m = ctx.measureText(text);
+  const ascent = (m.actualBoundingBoxAscent != null) ? m.actualBoundingBoxAscent : fontPx * 0.8;
+  const descent = (m.actualBoundingBoxDescent != null) ? m.actualBoundingBoxDescent : fontPx * 0.2;
+  const width = m.width;
+  ctx.restore();
+  return { width, ascent, descent };
 }
-
-/**
- * Plugin: add a slight jitter animation by attaching a tick function.
- * The tick mutates a small per-entry offset, and render uses it.
- */
-function pluginSlightJitter(entry, env) {
-  const rng = env.rng;
-  const basePhase = rng() * Math.PI * 2;
-  const amplitude = 0.003; // in normalized units
-  const speed = 1 + rng() * 2; // radians per second
-
-  const jitterState = { phase: basePhase };
-
-  function tick(deltaSeconds) {
-    jitterState.phase += speed * deltaSeconds;
-  }
-
-  function positionOffset() {
-    const x = Math.cos(jitterState.phase) * amplitude;
-    const y = Math.sin(jitterState.phase * 0.8) * amplitude;
-    return { x, y };
-  }
-
-  return { ...entry, tick, positionOffset };
-}
-
-const pluginRegistry = [
-  { name: 'randomColor', label: 'Colors', fn: pluginRandomColor, active: false },
-  { name: 'slightJitter', label: 'Jitter', fn: pluginSlightJitter, active: false }
-];
 
 function applyPluginDefaultsFromPrefs() {
   if (!Array.isArray(prefs.plugins)) return;
@@ -116,7 +61,7 @@ function applyPluginDefaultsFromPrefs() {
   for (const p of pluginRegistry) p.active = set.has(p.name);
 }
 
-// --------------------------- Setup ---------------------------
+// ============================== SETUP =======================================
 
 function setupCanvas(canvas, prefs) {
   const ctx = canvas.getContext('2d');
@@ -155,16 +100,20 @@ function setupCanvas(canvas, prefs) {
   }
 }
 
-// --------------------------- Storage ---------------------------
+
+
+// ============================== STORAGE =====================================
 
 /**
  * The persistent store of finalized entries.
- * Each entry: { text, xN, yN, seed, fontSizePx, fontFamily, textColor, timestamp,
+ * { text, xN, yN, seed, fontSizePx, fontFamily, textColor, timestamp,
  *               tick?, positionOffset? }
  */
 const storage = [];
 
-// --------------------------- Input ---------------------------
+
+
+// ============================== INPUT =======================================
 
 function createInputController(env) {
   let buffer = '';
@@ -273,7 +222,9 @@ function createEntryFromBuffer(text, position, seed, env) {
   };
 }
 
-// --------------------------- Middleware/Plugins ---------------------------
+
+
+// ============================== MIDDLEWARE / PLUGINS ========================
 
 function runMiddleware(entry, env) {
   // Build active plugin chain using registry state
@@ -290,7 +241,9 @@ function runMiddleware(entry, env) {
   return result;
 }
 
-// --------------------------- Render ---------------------------
+
+
+// ============================== RENDER LOOP =================================
 
 let animationHandle = null;
 let lastFrameMs = 0;
@@ -374,7 +327,7 @@ function drawFooterMenu(env) {
     const idx = i + 1;
     const status = p.active ? 'ON' : 'OFF';
     return `${idx} - ${p.label} (${status})`;
-  }).join(' | ');
+  }).join(' | ') + ' | Alt+Click delete';
   ctx.save();
   ctx.font = `${Math.max(10, Math.floor(prefs.fontSizePx * 0.6))}px ${prefs.fontFamily}`;
   ctx.fillStyle = '#888888';
@@ -393,7 +346,53 @@ function draw() {
   drawFooterMenu(env);
 }
 
-// --------------------------- Bootstrap ---------------------------
+// ============================== INTERACTION / HIT-TEST ======================
+
+function getEntryDrawPositionPx(env, entry) {
+  const { state } = env;
+  let xPx = entry.xN * state.widthCss;
+  let yPx = entry.yN * state.heightCss;
+  if (typeof entry.positionOffset === 'function') {
+    const off = entry.positionOffset();
+    xPx += off.x * state.widthCss;
+    yPx += off.y * state.heightCss;
+  }
+  return { xPx, yPx };
+}
+
+function getEntryBoundingBoxPx(env, entry) {
+  const { ctx } = env;
+  const { xPx, yPx } = getEntryDrawPositionPx(env, entry);
+  const { width, ascent, descent } = measureTextMetrics(ctx, entry.text, entry.fontSizePx, entry.fontFamily);
+  return {
+    left: xPx,
+    top: yPx - ascent,
+    right: xPx + width,
+    bottom: yPx + descent
+  };
+}
+
+function pointInRect(x, y, rect) {
+  return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+}
+
+function deleteEntryAtPoint(xCss, yCss) {
+  for (let i = storage.length - 1; i >= 0; i--) {
+    const entry = storage[i];
+    const bbox = getEntryBoundingBoxPx(env, entry);
+    if (pointInRect(xCss, yCss, bbox)) {
+      storage.splice(i, 1);
+      requestAnimationIfNeeded();
+      draw();
+      return true;
+    }
+  }
+  return false;
+}
+
+
+
+// ============================== BOOTSTRAP ===================================
 
 const canvas = document.getElementById('c');
 const env = setupCanvas(canvas, prefs);
@@ -416,6 +415,14 @@ document.addEventListener('keydown', (e) => {
       draw();
     }
   }
+});
+
+canvas.addEventListener('click', (e) => {
+  if (!e.altKey) return;
+  const rect = canvas.getBoundingClientRect();
+  const xCss = e.clientX - rect.left;
+  const yCss = e.clientY - rect.top;
+  deleteEntryAtPoint(xCss, yCss);
 });
 
 // Initial draw
