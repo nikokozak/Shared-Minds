@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Shared Minds — sketches</title>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --fg: #111111;
+        --muted: #666666;
+        --accent: #0a7f4f; /* restrained green, lisp-y */
+        --rule: #e9e9e9;
+        --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      }
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: var(--mono);
+        line-height: 1.6;
+      }
+      .wrap {
+        max-width: 720px;
+        padding: 48px 20px 80px;
+        margin: 0 auto;
+      }
+      header h1 {
+        margin: 0 0 4px 0;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+      }
+      header p {
+        margin: 0 0 24px 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .rule {
+        height: 1px;
+        background: var(--rule);
+        margin: 20px 0 24px;
+      }
+      .gallery {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+      a.sketch {
+        display: block;
+        padding: 10px 12px;
+        text-decoration: none;
+        color: inherit;
+        border-left: 2px solid transparent;
+        border-radius: 4px;
+      }
+      a.sketch:hover {
+        background: #f8f8f8;
+        border-left-color: var(--accent);
+      }
+      .sexpr {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .paren { color: var(--muted); }
+      .kw { color: var(--fg); font-weight: 700; }
+      .prop { color: var(--muted); }
+      .str { color: var(--accent); }
+      .comment { color: var(--muted); }
+      footer {
+        margin-top: 40px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0b0b0b;
+          --fg: #f0f0f0;
+          --muted: #9b9b9b;
+          --rule: #1b1b1b;
+          --accent: #4bd38a;
+        }
+        a.sketch:hover { background: #121212; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <h1>(shared-minds <span class="prop">:sketches</span>)</h1>
+        <p>Minimal listing. Lisp energy. No JS.</p>
+      </header>
+
+      <div class="rule"></div>
+
+      <section class="gallery" aria-label="Sketches">
+        <a class="sketch" href="./text-input/">
+          <div class="sexpr">
+            <span class="paren">(</span><span class="kw">sketch</span>
+            <span class="prop">:title</span> <span class="str">"Canvas Text Input"</span>
+            <span class="prop">:path</span> <span class="str">"text-input/"</span>
+            <span class="paren">)</span>
+          </div>
+        </a>
+
+        <!-- duplicate this block per sketch -->
+        <!--
+        <a class="sketch" href="./PATH/">
+          <div class="sexpr">
+            <span class="paren">(</span><span class="kw">sketch</span>
+            <span class="prop">:title</span> <span class="str">"TITLE"</span>
+            <span class="prop">:path</span> <span class="str">"PATH/"</span>
+            <span class="paren">)</span>
+          </div>
+        </a>
+        -->
+      </section>
+
+      <footer>
+        <span class="comment">; add more entries by duplicating a <a class="comment" href="#" onclick="return false;">sketch</a> block</span>
+      </footer>
+    </main>
+  </body>
+  </html>
+
+
