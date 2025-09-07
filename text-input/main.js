@@ -48,8 +48,10 @@ function generateSeed() {
 function isPrintableKey(event) {
   if (event.ctrlKey || event.metaKey || event.altKey) return false;
   if (event.key.length === 1) {
-    // Exclude space; we use it to finalize.
-    return event.key !== ' ';
+    // Exclude space (finalizes) and digits (reserved for UI toggles)
+    if (event.key === ' ') return false;
+    if (event.key >= '0' && event.key <= '9') return false;
+    return true;
   }
   return false;
 }
@@ -103,10 +105,16 @@ function pluginSlightJitter(entry, env) {
   return { ...entry, tick, positionOffset };
 }
 
-const availablePlugins = {
-  randomColor: pluginRandomColor,
-  slightJitter: pluginSlightJitter
-};
+const pluginRegistry = [
+  { name: 'randomColor', label: 'Colors', fn: pluginRandomColor, active: false },
+  { name: 'slightJitter', label: 'Jitter', fn: pluginSlightJitter, active: false }
+];
+
+function applyPluginDefaultsFromPrefs() {
+  if (!Array.isArray(prefs.plugins)) return;
+  const set = new Set(prefs.plugins);
+  for (const p of pluginRegistry) p.active = set.has(p.name);
+}
 
 // --------------------------- Setup ---------------------------
 
@@ -226,7 +234,8 @@ function createInputController(env) {
     return { text: buffer, xN: position.xN, yN: position.yN, seed, fontSizePx: prefs.fontSizePx, fontFamily: prefs.fontFamily, textColor: prefs.textColor };
   }
 
-  return { start, cancel, finalize, onKeyDown, getPreview };
+  function isActive() { return active; }
+  return { start, cancel, finalize, onKeyDown, getPreview, isActive };
 }
 
 /**
@@ -267,16 +276,15 @@ function createEntryFromBuffer(text, position, seed, env) {
 // --------------------------- Middleware/Plugins ---------------------------
 
 function runMiddleware(entry, env) {
-  console.log('runMiddleware', entry, env);
-  console.log('prefs.plugins', prefs.plugins);
-  if (!prefs.plugins || !prefs.plugins.length) return entry;
+  // Build active plugin chain using registry state
+  const activePlugins = pluginRegistry.filter(p => p.active);
+  if (!activePlugins.length) return entry;
   let result = entry;
   const rng = createRng(entry.seed);
   const pluginEnv = { ...env, rng };
-  for (const name of prefs.plugins) {
-    const pluginFn = availablePlugins[name];
-    if (typeof pluginFn === 'function') {
-      result = pluginFn(result, pluginEnv);
+  for (const p of activePlugins) {
+    if (typeof p.fn === 'function') {
+      result = p.fn(result, pluginEnv);
     }
   }
   return result;
@@ -346,25 +354,74 @@ function drawPreview(env, preview) {
   drawEntry(env, ghost);
 }
 
+function drawPlaceholder(env) {
+  if (storage.length > 0) return;
+  const preview = input.getPreview();
+  if (preview) return; // hide while typing
+  const { ctx, state } = env;
+  ctx.save();
+  ctx.font = `${Math.max(14, prefs.fontSizePx)}px ${prefs.fontFamily}`;
+  ctx.fillStyle = '#bbbbbb';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('provide me with a word', state.widthCss / 2, state.heightCss / 2);
+  ctx.restore();
+}
+
+function drawFooterMenu(env) {
+  const { ctx, state } = env;
+  const items = pluginRegistry.map((p, i) => {
+    const idx = i + 1;
+    const status = p.active ? 'ON' : 'OFF';
+    return `${idx} - ${p.label} (${status})`;
+  }).join(' | ');
+  ctx.save();
+  ctx.font = `${Math.max(10, Math.floor(prefs.fontSizePx * 0.6))}px ${prefs.fontFamily}`;
+  ctx.fillStyle = '#888888';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'bottom';
+  const margin = prefs.marginPx;
+  ctx.fillText(items, margin, state.heightCss - margin);
+  ctx.restore();
+}
+
 function draw() {
   clearCanvas(env);
+  drawPlaceholder(env);
   for (const e of storage) drawEntry(env, e);
   drawPreview(env, input.getPreview());
+  drawFooterMenu(env);
 }
 
 // --------------------------- Bootstrap ---------------------------
 
 const canvas = document.getElementById('c');
 const env = setupCanvas(canvas, prefs);
+applyPluginDefaultsFromPrefs();
 const input = createInputController(env);
 
 document.addEventListener('keydown', input.onKeyDown);
 document.addEventListener('paste', (e) => e.preventDefault());
 
+document.addEventListener('keydown', (e) => {
+  // Number key toggles for plugins only when not typing
+  if (input.isActive()) return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key;
+  if (k >= '1' && k <= '9') {
+    const idx = parseInt(k, 10) - 1;
+    if (idx >= 0 && idx < pluginRegistry.length) {
+      e.preventDefault();
+      pluginRegistry[idx].active = !pluginRegistry[idx].active;
+      draw();
+    }
+  }
+});
+
 // Initial draw
 draw();
 
 // Expose available plugins in global for quick experimentation in console
-window.canvasTextApp = { prefs, storage, availablePlugins };
+window.canvasTextApp = { prefs, storage, pluginRegistry };
 
 
