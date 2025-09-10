@@ -16,6 +16,7 @@ function generateSeed() {
   if (typeof prefs.seedStrategy === 'number') return prefs.seedStrategy >>> 0;
   if (prefs.seedStrategy === 'time') return (Date.now() & 0xffffffff) >>> 0;
   if (typeof prefs.seedStrategy === 'string') return hashStringToSeed(prefs.seedStrategy);
+  // Fallback to unsigned 32
   return (Math.random() * 0xffffffff) >>> 0;
 }
 

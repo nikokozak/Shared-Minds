@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Text Discovery</title>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background: #ffffff;
+        color: #111111;
+      }
+      #sentence {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background: #ffffff;
+        color: #111111;
+        font-family: monospace;
+        font-size: 12px;
+        line-height: 1.6;
+        padding: 8px 10px;
+        user-select: none;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        z-index: 10;
+      }
+      #debugPanel {
+        position: fixed;
+        right: 8px;
+        bottom: 8px;
+        background: rgba(255,255,255,0.9);
+        color: #111;
+        font-family: monospace;
+        font-size: 11px;
+        padding: 6px 8px;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        z-index: 11;
+        display: none;
+      }
+      canvas {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="sentence"></div>
+    <canvas id="c"></canvas>
+    <div id="debugPanel"></div>
+    <script type="module" src="./prefs.js"></script>
+    <script type="module" src="./words.js"></script>
+    <script type="module" src="./main.js"></script>
+  </body>
+  </html>
+
+
