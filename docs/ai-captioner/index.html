@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Captioner</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <header id="toolbar">
+      <button id="clearTool" class="tool">Clear</button>
+      <button id="processBtn">Process (Space)</button>
+    </header>
+    <main id="content">
+      <section id="canvasContainer">
+        <canvas id="drawingCanvas" width="400" height="400"></canvas>
+      </section>
+      <section id="captionContainer">
+        <div id="caption"></div>
+        <div id="loading" hidden>Analyzing image...</div>
+      </section>
+    </main>
+  </div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+:root {
+  --bg: #fbfbf7;
+  --text: #222;
+  --muted: #777;
+  --accent: #7a6cff;
+  --pane-bg: #fffefb;
+  --border: #e8e5db;
+  --font: ui-sans-serif, -apple-system, Segoe UI, Roboto, Inter, system-ui, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --fs-0: 14px;
+  --fs-1: 16px;
+  --fs-2: 18px;
+  --fs-3: 20px;
+  --lh: 1.6;
+  --space-1: 8px;
+  --space-2: 12px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 32px;
+  --gutter: var(--space-5);
+}
+
+html, body, #app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--fs-2);
+  line-height: var(--lh);
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+}
+
+#toolbar {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-2) var(--gutter);
+  background: var(--bg);
+}
+
+.tool, #processBtn {
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-0);
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.tool:hover, #processBtn:hover {
+  opacity: 0.7;
+}
+
+.tool.active {
+  background: var(--text);
+  color: var(--bg);
+}
+
+#processBtn {
+  margin-left: auto;
+}
+
+#content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--gutter);
+  gap: var(--space-4);
+}
+
+#canvasContainer {
+  background: var(--pane-bg);
+  border: 1px solid var(--border);
+  padding: var(--space-3);
+  border-radius: 4px;
+}
+
+#drawingCanvas {
+  display: block;
+  background: white;
+  border: 1px solid var(--border);
+  cursor: crosshair;
+}
+
+#captionContainer {
+  width: 100%;
+  max-width: 400px;
+  padding: var(--space-3) 0;
+  position: relative;
+  text-align: center;
+}
+
+#caption {
+  line-height: var(--lh);
+  font-size: var(--fs-1);
+  color: var(--text);
+  min-height: 1.6em;
+  font-style: italic;
+}
+
+#loading {
+  position: absolute;
+  right: 0;
+  bottom: var(--space-1);
+  color: var(--muted);
+  font-size: var(--fs-0);
+  font-style: italic;
+}
+
+.loading #caption {
+  opacity: 0.6;
+}
+
+.error #loading {
+  color: #d73a49;
+}
+
+/* Empty state hint */
+#caption:empty::before {
+  content: "Draw something and press Process (or Space)...";
+  color: var(--muted);
+  font-style: italic;
+}
