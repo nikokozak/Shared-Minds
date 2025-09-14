@@ -1,0 +1,102 @@
+:root {
+  --bg: #fbfbf7;
+  --text: #222;
+  --muted: #777;
+  --accent: #7a6cff;
+  --pane-bg: #fffefb;
+  --border: #e8e5db;
+  --font: ui-sans-serif, -apple-system, Segoe UI, Roboto, Inter, system-ui, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --fs-0: 14px;
+  --fs-1: 16px;
+  --fs-2: 18px;
+  --fs-3: 20px;
+  --lh: 1.6;
+  --space-1: 8px;
+  --space-2: 12px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 32px;
+  --gutter: var(--space-5);
+}
+
+html, body, #app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--fs-2);
+  line-height: var(--lh);
+}
+
+#toolbar {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-3) var(--gutter);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+}
+
+#split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gutter);
+  padding: var(--gutter);
+}
+
+#userPane, #aiPane {
+  background: var(--pane-bg);
+  border: 1px solid var(--border);
+  padding: var(--space-4);
+  min-height: 60vh;
+  position: relative;
+}
+
+#editor {
+  width: 100%;
+  min-height: 60vh;
+  border: 0;
+  outline: none;
+  background: transparent;
+  resize: none;
+  font: inherit;
+  line-height: var(--lh);
+}
+
+#hint {
+  position: absolute;
+  top: var(--space-4);
+  left: var(--space-4);
+  color: var(--muted);
+  pointer-events: none;
+}
+
+#aiContent {
+  white-space: pre-wrap;
+}
+
+#aiLoading {
+  position: absolute;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  color: var(--muted);
+}
+
+input[type="range"] {
+  accent-color: var(--accent);
+}
+
+.loading #aiContent {
+  opacity: 0.6;
+}
+
+.error #aiLoading {
+  color: #d73a49;
+}

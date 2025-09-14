@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contrapuntal Writing</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <header id="toolbar">
+      <label for="dial">Divergence</label>
+      <input id="dial" type="range" min="0" max="100" value="50" />
+      <span id="dialValue">50</span>
+    </header>
+    <main id="split">
+      <section id="userPane">
+        <div id="hint">Start typing. The right side will also begin writing. Text is generated after 60 typed characters, or after every sentence written.</div>
+        <textarea id="editor" spellcheck="false"></textarea>
+      </section>
+      <section id="aiPane">
+        <div id="aiContent"></div>
+        <div id="aiLoading" hidden>Thinking…</div>
+      </section>
+    </main>
+  </div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
